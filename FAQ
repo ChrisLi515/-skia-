@@ -15,26 +15,26 @@
   libskiagl.so：包含/skia/src/gl里面的内容，主要用来调用opengl实现部分效果。
 5.Q：重要类简介
   A：(1)SkCanvas
-这个类是Skia引擎的一个核心类，他封装了所有对设备进行的画图操作。这个类自身包含了一个设备的引用，以及一个矩阵和裁剪栈。所有的画图操作，都是在经过栈内存放的矩阵变幻之后才进行的（这点和OpenGL类似）。当然，最终显示给用户的图像，还必须经过裁剪堆栈的运算。
-SkCanvas记录着整个设备的绘画状态，而设备上面绘制的对象的状态又是由SkPaint类来记录的，SkPaint类作为参数，传递给不同SkCanvas类的成员函数drawXXXX().(比如:drawPoints, drawLine, drawRect, drawCircle)。SkPaint类里记录着如颜色(color)，字体(typeface)，文字大小(textSize)，文字粗细(strokeWidth)，渐变(gradients, patterns)等。
-SkCanvas类的主要成员函数：
-> 构造函数，给定一个Bitmap或者Device，在给定的这个对象上进行画图，Device可以为空。
+  这个类是Skia引擎的一个核心类，他封装了所有对设备进行的画图操作。这个类自身包含了一个设备的引用，以及一个矩阵和裁剪栈。所有的画图操作，都是在经过栈内存放的矩阵变幻之后才进行的（这点和OpenGL类似）。当然，最终显示给用户的图像，还必须经过裁剪堆栈的运算。
+  SkCanvas记录着整个设备的绘画状态，而设备上面绘制的对象的状态又是由SkPaint类来记录的，SkPaint类作为参数，传递给不同SkCanvas类的成员函数drawXXXX().(比如:drawPoints, drawLine, drawRect, drawCircle)。SkPaint类里记录着如颜色(color)，字体(typeface)，文字大小(textSize)，文字粗细(strokeWidth)，渐变(gradients, patterns)等。
+  SkCanvas类的主要成员函数：
+  > 构造函数，给定一个Bitmap或者Device，在给定的这个对象上进行画图，Device可以为空。
             SkCanvas(const SkBitmap& bitmap);
             SkCanvas(SkDevice* device = NULL);
-> setViewport, getViewport, 这2个函数只有在支持OpenGL视图时才有效。
-> save, saveLayer, saveLayerAlpha, restore，这4个函数用于保存和恢复显示矩阵，剪切，过滤堆栈，不同函数有不同的附加功能。
-> 移位，缩放，旋转，变形函数。
+  > setViewport, getViewport, 这2个函数只有在支持OpenGL视图时才有效。
+  > save, saveLayer, saveLayerAlpha, restore，这4个函数用于保存和恢复显示矩阵，剪切，过滤堆栈，不同函数有不同的附加功能。
+  > 移位，缩放，旋转，变形函数。
             translate(SkiaScalar dx， SkiaScalar dy);
             scale(SkScalar sx， SkScalar sy);
             rotate(SkScalar degrees);
             skew(SkScalar sx， SkScalar sy);
-> 指定具体矩阵，进行相应的变换的函数，以上4个方法都可以通过定义特定的矩阵，再调用此函数实现。
+  > 指定具体矩阵，进行相应的变换的函数，以上4个方法都可以通过定义特定的矩阵，再调用此函数实现。
             cancat(const SkMatrix& matrix);
-> 图像剪辑，把指定的区域显示出来。
+  > 图像剪辑，把指定的区域显示出来。
             clipRect(SkRect&...);
             clipPath(SkPath&...);
             clipRegion(SkRegion&...);
- > 在当前画布内画图，有以下多种画图方式：
+  > 在当前画布内画图，有以下多种画图方式：
             drawARGB(u8 a, u8 r, u8 g, u8 b....) 给定透明度以及红，绿，兰3色，填充整个可绘制区域。
             drawColor(SkColor color...) 给定颜色color, 填充整个绘制区域。
             drawPaint(SkPaint& paint) 用指定的画笔填充整个区域。
@@ -69,21 +69,21 @@ SkCanvas类的主要成员函数：
   A：注：Skia调用关系简图：https://img-blog.csdn.net/20150110012642203?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvanh0MTIzNGFuZDIwMTA=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center
   1、界面绘制（lockCanvas——draw——unlockCanvas流程）
 （1）UI控件，未开启硬件加速。由performTravelsals——drawSoftware调入。
-Android显示系统是最复杂的Android最复杂的子系统，没有之一，这里只说明软件绘制时的一个基本过程：
-a、计算布局，看是否需要更新View。
-b、计算所有需要更新的View的区域，计算其最小外包矩形，即dirtyRect
-c、由Surface去Lock一个Canvas，Lock时指定dirtyRect，这里涉及gui的buffer轮换机制，会去获取一块未在显示的Buffer，由于换了buffer，在gui模块会去拷贝上一帧非dirtyRect的部分。
-d、执行根View的draw方法，递归调用所有子View的onDraw方法。由于Canvas对应的是软件绘制的canvas，所有绘制操作经过Canvas——SkiaCanvas——SkCanvas的流程，由skia引擎执行。（AndroidL上在jni（libandroid_runtime）处作了一层SkiaCanvas的封装，4.4及以前是Canvas——SkCanvas）
-e、完成绘制，让Surface去unlockCanvas，将绘制好的Buffer送显。
+  Android显示系统是最复杂的Android最复杂的子系统，没有之一，这里只说明软件绘制时的一个基本过程：
+    a、计算布局，看是否需要更新View。
+    b、计算所有需要更新的View的区域，计算其最小外包矩形，即dirtyRect
+    c、由Surface去Lock一个Canvas，Lock时指定dirtyRect，这里涉及gui的buffer轮换机制，会去获取一块未在显示的Buffer，由于换了buffer，在gui模块会去拷贝上一帧非dirtyRect的部分。
+    d、执行根View的draw方法，递归调用所有子View的onDraw方法。由于Canvas对应的是软件绘制的canvas，所有绘制操作经过Canvas——SkiaCanvas——SkCanvas的流程，由skia引擎执行。（AndroidL上在jni（libandroid_runtime）处作了一层SkiaCanvas的封装，4.4及以前是Canvas——SkCanvas）
+    e、完成绘制，让Surface去unlockCanvas，将绘制好的Buffer送显。
 （2）SurfaceView，这个是由应用显式实现lockCanvas——draw——unlockCanvas流程。
   2、图像处理
-这种情况下，开发者自行基于目标Bitmap创建Canvas，调用Canvas的API绘制图像，一般是作图像的缩放、旋转处理，也可以加入渐变特效。（不是 lockCanvas 或 继承 onDraw 方法中传入的Canvas，就别想拿去上屏了）
+  这种情况下，开发者自行基于目标Bitmap创建Canvas，调用Canvas的API绘制图像，一般是作图像的缩放、旋转处理，也可以加入渐变特效。（不是 lockCanvas 或 继承 onDraw 方法中传入的Canvas，就别想拿去上屏了）
   3、图像编解码
-Skia对各种类型的图片作了适配，提供统一的接口，开发者调用BitmapFactory，BitmapFactory进一步调用jni——skia。
-（1）关于图像全解，这部分调用逻辑看上去简单，实际上对于输入输出流的处理还是比较复杂的，涉及Java的流——Skia规定的流——对应解码库的流两重转换。
-（2）关于区域解码，这部分是google为平衡内存——性能——显示速度而设计的方案，一些Android机器上的图库打开照片时有一块一块渐渐清晰的过程，就是区域解码然后局部刷新的结果。
-区域解码分成两步：
-a、创建tileIndex，以便查找某个区域所对应的码流位置。
-b、解码：输入指定区域，按照tileIndex查找对应码流，将对应区域的图片解出来，这个过程一般会调用多次。
-4、番外：webview软件渲染
-由于libchromeview将libskia以静态方法集成进去，便跟系统的skia库没什么关系了。对Android系统而言是统一的webview显示框架。
+    Skia对各种类型的图片作了适配，提供统一的接口，开发者调用BitmapFactory，BitmapFactory进一步调用jni——skia。
+  （1）关于图像全解，这部分调用逻辑看上去简单，实际上对于输入输出流的处理还是比较复杂的，涉及Java的流——Skia规定的流——对应解码库的流两重转换。
+  （2）关于区域解码，这部分是google为平衡内存——性能——显示速度而设计的方案，一些Android机器上的图库打开照片时有一块一块渐渐清晰的过程，就是区域解码然后局部刷新的结果。
+    区域解码分成两步：
+    a、创建tileIndex，以便查找某个区域所对应的码流位置。
+    b、解码：输入指定区域，按照tileIndex查找对应码流，将对应区域的图片解出来，这个过程一般会调用多次。
+  4、番外：webview软件渲染
+  由于libchromeview将libskia以静态方法集成进去，便跟系统的skia库没什么关系了。对Android系统而言是统一的webview显示框架。

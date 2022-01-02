@@ -1,0 +1,54 @@
+Skia在Windows下的编译：
+
+1、   从https://www.python.org/download/releases/2.7.8/下载python-2.7.8.amd64.msi并安装；安装到D:\ProgramFiles\Python27目录下，并将D:\ProgramFiles\Python27添加到环境变量Path中，重启电脑；
+
+2、    从 https://cygwin.com/install.html 下载setup-x86_64.exe 并安装；
+
+3、   使用svn，下载gyp: http://gyp.googlecode.com/svn/trunk, 将整个gyp文件夹存放到/trunk_no_commit/third_party/externals文件夹下；
+
+4、   在其它分支中将jsoncpp、jsoncpp-chromium、libjpeg、libwebp四个文件夹内容全部拷贝到/trunk_no_commit/third_party/externals文件夹下；
+
+5、   打开Cygwin，将其切换到Skia的trunk_no_commit目录下，执行 python gyp_skia，会生成一个out文件夹，里面有生成的skia.sln工程；
+
+6、   如果在执行python gyp_skia命令过程中，提示/third_party/externals/libwebp/src/dec/frame.c 等文件丢失，则从相关网站下载最新代码替换之即可。
+
+7、   (1)、如果出现errorC2220:warning treated as error -no ‘object’ file generated，则将相应工程中的C/C++->General:Treat Warning As Errors,由原来的Level3(/W3)改为No(/WX-)，如effects、gm工程；(2)、选中gm/verttext.cpp文件->File->AdvancedSave Options->Encoding:由原来的Unicode(UTF-8 without signature)-Codepage 65001改为ChineseSimplified(GB2312)-Codepage 936；(3)、如果third_party/extternal中的第三方库文件编译时与其它源代码不匹配，可以通过改动gyp文件夹下的相应.gyp文件来做相应的调整；
+
+8、   通过svn http://skia.googlecode.com/svn下载所有相应的Skia源码，包括branches和trunk，下载后发现没有trunk，只有trunk_no_commit；
+
+9、   打开Cygwin，将其定位到trunk_no_commit文件夹，执行 python gyp_skia 命令，如果出现Warning: Missing input files相关信息，说明缺少相关文件，则根据提示查找原因，否则在后期编译时会报错；
+
+10、 正确执行完pythongyp_skia命令后，会在trunk_no_commit目录下生成out文件夹，打开里面的skia.sln，编译SampleApp工程，会生成SampleApp.exe和其它相应静态库。
+
+11、仿照tests工程新创建一个TestSkia工程，工程设置及代码如下：
+ (1)、Debug和Release下，Character Set:Use Unicode Character Set；
+
+ (2)、C/C++ ->Additional Include Directories:
+
+ 
+
+E:\Skia\code\google\trunk_no_commit\includeE:\Skia\code\google\trunk_no_commit\include\animatorE:\Skia\code\google\trunk_no_commit\include\configE:\Skia\code\google\trunk_no_commit\include\coreE:\Skia\code\google\trunk_no_commit\include\device\xpsE:\Skia\code\google\trunk_no_commit\include\effectsE:\Skia\code\google\trunk_no_commit\include\gpuE:\Skia\code\google\trunk_no_commit\include\gpu\glE:\Skia\code\google\trunk_no_commit\include\imagesE:\Skia\code\google\trunk_no_commit\include\pathopsE:\Skia\code\google\trunk_no_commit\include\pdfE:\Skia\code\google\trunk_no_commit\include\pipeE:\Skia\code\google\trunk_no_commit\include\portsE:\Skia\code\google\trunk_no_commit\include\recordE:\Skia\code\google\trunk_no_commit\include\svgE:\Skia\code\google\trunk_no_commit\include\textE:\Skia\code\google\trunk_no_commit\include\utilsE:\Skia\code\google\trunk_no_commit\include\utils\winE:\Skia\code\google\trunk_no_commit\include\viewsE:\Skia\code\google\trunk_no_commit\include\views\animatedE:\Skia\code\google\trunk_no_commit\include\xmlE:\Skia\code\google\trunk_no_commit\tools
+
+ (3)、C/C++ -> Preprocessor: 
+  Debug:
+
+WIN32_DEBUG_CONSOLESK_INTERNALSK_GAMMA_SRGBSK_GAMMA_APPLY_TO_A8SK_SCALAR_TO_FLOAT_EXCLUDEDSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1SK_SUPPORT_GPU=1SK_SUPPORT_OPENCL=0SK_FORCE_DISTANCEFIELD_FONTS=0SK_SCALAR_IS_FLOATSK_CAN_USE_FLOATSK_BUILD_FOR_WIN32_CRT_SECURE_NO_WARNINGSGR_GL_FUNCTION_TYPE=__stdcallSK_BUILD_JSON_WRITERSK_SUPPORT_PDFSK_DEBUGSK_DEVELOPER=1
+
+  Release:
+WIN32NDEBUG_CONSOLESK_INTERNALSK_GAMMA_SRGBSK_GAMMA_APPLY_TO_A8SK_SCALAR_TO_FLOAT_EXCLUDEDSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1SK_SUPPORT_GPU=1SK_SUPPORT_OPENCL=0SK_FORCE_DISTANCEFIELD_FONTS=0SK_SCALAR_IS_FLOATSK_CAN_USE_FLOATSK_BUILD_FOR_WIN32_CRT_SECURE_NO_WARNINGSGR_GL_FUNCTION_TYPE=__stdcallSK_BUILD_JSON_WRITERSK_SUPPORT_PDFSK_RELEASE
+
+ (4)、Linker -> Input -> Additional Dependencies:
+OpenGL32.libusp10.libDelayImp.libwindowscodecs.lib
+
+ (5)、将trunk_no_commit->tools->flags中的SkCommandLineFlags两个文件拷贝到此测试工程下并加入到工程中；
+ (6)、stdafx.h:
+
+#pragma once#include "targetver.h"#include <stdio.h>#include "SkCanvas.h"#include "SkData.h"#include "SkDocument.h"#include "SkForceLinking.h"#include "SkGraphics.h"#include "SkSurface.h"#include "SkImage.h"#include "SkStream.h"#include "SkString.h"#include "SkCommandLineFlags.h"
+
+ (7)、stdafx.cpp:
+#include "stdafx.h"// TODO: reference any additional headers you need in STDAFX.H// and not in this file#ifdef _DEBUG #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/experimental.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/libetc1.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/libjpeg.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/libwebp_dec.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/libwebp_dsp.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/libwebp_enc.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/libwebp_utils.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/lua.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/skflate.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/lib/views_animated.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_animator.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_core.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_effects.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_images.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_opts.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_opts_ssse3.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_pdf.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_ports.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_sfnt.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_skgpu.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_skgputest.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_utils.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_views.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Debug/skia_xml.lib")#else #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/experimental.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/libetc1.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/libjpeg.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/libwebp_dec.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/libwebp_dsp.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/libwebp_enc.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/libwebp_utils.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/lua.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/skflate.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/lib/views_animated.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_animator.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_core.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_effects.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_images.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_opts.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_opts_ssse3.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_pdf.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_ports.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_sfnt.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_skgpu.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_skgputest.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_utils.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_views.lib") #pragma comment(lib, "E:/Skia/code/google/trunk_no_commit/out/Release/skia_xml.lib")#endif
+
+ (8)、TestSkia.cpp:
+#include "stdafx.h"#include <iostream>using namespace std;__SK_FORCE_IMAGE_DECODER_LINKING;DEFINE_string2(outFile, o, "skhello", "The filename to write the image.");DEFINE_string2(text, t, "Hello", "The string to write.");static void doDraw(SkCanvas* canvas, const SkPaint& paint, const char text[]) { SkRect bounds; canvas->getClipBounds(&bounds); canvas->drawColor(SK_ColorWHITE); canvas->drawText(text, strlen(text), bounds.centerX(), bounds.centerY(), paint);}static bool do_surface(int w, int h, const char path[], const char text[], const SkPaint& paint) { SkAutoTUnref<SkSurface> surface(SkSurface::NewRasterPMColor(w, h)); doDraw(surface->getCanvas(), paint, text); SkAutoTUnref<SkImage> image(surface->newImageSnapshot()); SkAutoDataUnref data(image->encode()); if (NULL == data.get()) {  return false; } SkFILEWStream stream(path); return stream.write(data->data(), data->size());}static bool do_document(int w, int h, const char path[], const char text[], const SkPaint& paint) { SkAutoTUnref<SkDocument> doc(SkDocument::CreatePDF(path)); if (doc.get()) {  SkScalar width = SkIntToScalar(w);  SkScalar height = SkIntToScalar(h);  doDraw(doc->beginPage(width, height, NULL), paint, text);  return true; } return false;}int tool_main(int argc, char** argv) { SkCommandLineFlags::SetUsage(""); SkCommandLineFlags::Parse(argc, argv); SkAutoGraphics ag; SkString path("skhello"); SkString text("Hello"); if (!FLAGS_outFile.isEmpty()) {  path.set(FLAGS_outFile[0]); } if (!FLAGS_text.isEmpty()) {  text.set(FLAGS_text[0]); } SkPaint paint; paint.setAntiAlias(true); paint.setTextSize(SkIntToScalar(30)); paint.setTextAlign(SkPaint::kCenter_Align); SkScalar width = paint.measureText(text.c_str(), text.size()); SkScalar spacing = paint.getFontSpacing(); int w = SkScalarRoundToInt(width) + 30; int h = SkScalarRoundToInt(spacing) + 30; static const struct {  bool (*fProc)(int w, int h, const char path[], const char text[],   const SkPaint&);  const char* fSuffix; } gRec[] = {  { do_surface, ".png" },  { do_document, ".pdf" }, }; for (size_t i = 0; i < SK_ARRAY_COUNT(gRec); ++i) {  SkString file;  file.printf("%s%s", path.c_str(), gRec[i].fSuffix);  if (!gRec[i].fProc(w, h, file.c_str(), text.c_str(), paint)) {   return -1;  } } return 0;}int main(int argc, char* argv[]){ int flag = tool_main(argc, (char**) argv); if (flag == 0)  cout<<"ok"<<endl; else   cout<<"error"<<endl; return 0;}
+
+运行此工程，会在此工程目录下生成 skhello.pdf 和 skhello.png 两个文件，文件内容为Hello
